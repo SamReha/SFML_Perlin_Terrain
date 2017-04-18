@@ -24,7 +24,7 @@ bool TileMap::load(const std::string& tileset, sf::Vector2u tileSize, const int*
     for (unsigned int i = 0; i < width; ++i) {
         for (unsigned int j = 0; j < height; ++j) {
             // get the current tile number
-            int tileNumber = tiles[i + j * width];
+            int tileNumber = tiles[i + (j * width)];
 
             // find its position in the tileset texture
             int tu = tileNumber % (m_tileset.getSize().x / tileSize.x);
