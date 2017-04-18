@@ -2,8 +2,8 @@
 
 // SFML properties
 #define RENDERDEPTH 5
-#define SCREENWIDTH 1200
-#define SCREENHEIGHT 800
+#define SCREENWIDTH 1024
+#define SCREENHEIGHT 512
 
 // Handy math defines
 #define ONE_THIRTIETH 0.0333

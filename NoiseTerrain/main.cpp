@@ -8,8 +8,9 @@
 
 using namespace noise;
 
-float z = 0.f;
-sf::Vector2f offset(0.0, 0.0);
+sf::Vector3<double> position(0.0, 0.0, 0.0);
+double speed = 0.1;
+int seed = 0;
 
 // Returns indexes hand selected from the intput tilesheet
 int getTileIndex(double noiseValue) {
@@ -27,7 +28,7 @@ void generateTileMap(module::Perlin perlinMod, int* level) {
     double noiseMap[MAP_WIDTH*MAP_HEIGHT];
     for (unsigned int x = 0; x < MAP_WIDTH; x++) {
         for (unsigned int y = 0; y < MAP_HEIGHT; y++) {
-            noiseMap[x + (y*MAP_WIDTH)] = perlinMod.GetValue(((float)x / 10) + offset.x, ((float)y / 10) + offset.y, z);
+            noiseMap[x + (y*MAP_WIDTH)] = perlinMod.GetValue(((double)x / 10) + position.x, ((double)y / 10) + position.y, position.z);
         }
     }
 
@@ -44,7 +45,8 @@ int main() {
     // Set up our perlin module
     module::Perlin perlinMod;
     srand(time(NULL));
-    perlinMod.SetSeed(rand()); // Randomize the Perlin seed
+    seed = rand();
+    perlinMod.SetSeed(seed); // Randomize the Perlin seed
 
     // Get the initial terrain
     int level[MAP_WIDTH*MAP_HEIGHT];
@@ -54,6 +56,36 @@ int main() {
     TileMap map;
     if (!map.load("tileset_2.gif", sf::Vector2u(TILE_SIZE, TILE_SIZE), level, MAP_WIDTH, MAP_HEIGHT))
         return EXIT_FAILURE;
+
+    // Initialize text elements
+    sf::Font font;
+    if (!font.loadFromFile("sansation.ttf")) {
+        return EXIT_FAILURE;
+    }
+
+    sf::Text scrollText("Use WASD to scroll", font, 25);
+    scrollText.setColor(sf::Color::White);
+    scrollText.setPosition(512, 0);
+
+    sf::Text changeTimeText("Use [left] or [right] to modify time", font, 25);
+    changeTimeText.setColor(sf::Color::White);
+    changeTimeText.setPosition(512, 25);
+
+    sf::Text changeSeedText("Use [space] to randomize the seed", font, 25);
+    changeSeedText.setColor(sf::Color::White);
+    changeSeedText.setPosition(512, 50);
+
+    sf::Text positionText("Position: (0, 0)", font, 25);
+    positionText.setColor(sf::Color::White);
+    positionText.setPosition(512, 100);
+
+    sf::Text timeText("Time: 0.000", font, 25);
+    timeText.setColor(sf::Color::White);
+    timeText.setPosition(512, 125);
+
+    sf::Text seedText("Seed: 0.000", font, 25);
+    seedText.setColor(sf::Color::White);
+    seedText.setPosition(512, 150);
 
     // run the main loop
     while (window.isOpen()) {
@@ -69,19 +101,26 @@ int main() {
                 if (event.key.code == sf::Keyboard::Escape) {
                     window.close();
                 } else if (event.key.code == sf::Keyboard::Space) { // Reseed the map
-                    perlinMod.SetSeed(rand());
+                    seed = rand();
+                    perlinMod.SetSeed(seed);
                 } else if (event.key.code == sf::Keyboard::Left) {  // Travel backwards in time
-                    z -= 0.05;
+                    position.z -= 0.05;
                 } else if (event.key.code == sf::Keyboard::Right) { // Travel forwards in time
-                    z += 0.05;
-                } else if (event.key.code == sf::Keyboard::W) {     // Scroll the map
-                    offset.y -= 0.1;
-                } else if (event.key.code == sf::Keyboard::S) {     // Scroll the map
-                    offset.y += 0.1;
-                } else if (event.key.code == sf::Keyboard::A) {     // Scroll the map
-                    offset.x -= 0.1;
-                } else if (event.key.code == sf::Keyboard::D) {     // Scroll the map
-                    offset.x += 0.1;
+                    position.z += 0.05;
+                } else {
+                    // Scroll the map
+                    if (event.key.code == sf::Keyboard::W) {
+                        position.y -= speed;
+                    }
+                    if (event.key.code == sf::Keyboard::S) {
+                        position.y += speed;
+                    }
+                    if (event.key.code == sf::Keyboard::A) {
+                        position.x -= speed;
+                    }
+                    if (event.key.code == sf::Keyboard::D) {
+                        position.x += speed;
+                    }
                 }
 
                 // Refresh the map
@@ -89,10 +128,20 @@ int main() {
                 map.load("tileset_2.gif", sf::Vector2u(TILE_SIZE, TILE_SIZE), level, MAP_WIDTH, MAP_HEIGHT);
             }
         }
+        // Update Text
+        positionText.setString("Position: (" + std::to_string(position.x) + ", " + std::to_string(position.y) + ")");
+        timeText.setString("Time: " + std::to_string(position.z));
+        seedText.setString("Seed: " + std::to_string(seed));
 
         // draw the map
         window.clear();
         window.draw(map);
+        window.draw(scrollText);
+        window.draw(changeTimeText);
+        window.draw(changeSeedText);
+        window.draw(positionText);
+        window.draw(timeText);
+        window.draw(seedText);
         window.display();
     }
 
